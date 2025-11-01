@@ -12,7 +12,7 @@ function Header() {
         <div>
           <h3 className="text-primary fw-bold mb-0">SchoolBus</h3>
           <small className="text-secondary">
-            Hệ thống quản lý đưa đón học sinh
+            Hệ thống quản lý 
           </small>
         </div>
       </div>
@@ -21,11 +21,10 @@ function Header() {
           className="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center fw-bold fs-5"
           style={{ width: "50px", height: "50px" }}
         >
-          PH
+          AD
         </div>
         <div>
-          <p className="mb-0 fw-semibold">Phụ huynh Nguyễn Văn A</p>
-          <small className="text-muted">Lớp 5B - Trần Ngọc Minh Thư</small>
+          <p className="mb-0 fw-semibold">Admin</p>
         </div>
       </div>
     </header>

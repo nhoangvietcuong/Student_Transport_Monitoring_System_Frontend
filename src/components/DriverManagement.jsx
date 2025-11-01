@@ -1,49 +1,53 @@
+import React, { useState } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function InformationStudent() {
-  const [students, setStudents] = useState([
+function DriverManagement() {
+  const [drivers, setDrivers] = useState([
     {
       id: 1,
-      name: "Nguyen Van A",
-      studentId: "STU001",
-      email: "a@example.com",
+      name: "Nguyễn Văn A",
+      license: "B2-12345",
       phone: "0909123456",
-      address: "123 Le Loi, HCM",
+      email: "driverA@example.com",
+      experience: 5,
     },
     {
       id: 2,
-      name: "Tran Thi B",
-      studentId: "STU002",
-      email: "b@example.com",
+      name: "Trần Thị B",
+      license: "C-54321",
       phone: "0912345678",
-      address: "456 Nguyen Trai, HCM",
+      email: "driverB@example.com",
+      experience: 3,
     },
   ]);
 
   const [showModal, setShowModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [formData, setFormData] = useState({
+    id: null,
     name: "",
-    studentId: "",
-    email: "",
+    license: "",
     phone: "",
-    address: "",
+    email: "",
+    experience: "",
   });
   const [errors, setErrors] = useState({});
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = "Full name is required";
-    if (!formData.studentId.trim())
-      newErrors.studentId = "Student ID is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Invalid email format";
-    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+    if (!formData.name.trim()) newErrors.name = "Tên tài xế không được trống";
+    if (!formData.license.trim())
+      newErrors.license = "Số giấy phép lái xe không được trống";
+    if (!formData.phone.trim()) newErrors.phone = "Số điện thoại không được trống";
     else if (!/^[0-9]{9,11}$/.test(formData.phone))
-      newErrors.phone = "Invalid phone number";
-    if (!formData.address.trim()) newErrors.address = "Address is required";
+      newErrors.phone = "Số điện thoại không hợp lệ";
+    if (!formData.email.trim()) newErrors.email = "Email không được trống";
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Email không hợp lệ";
+    if (!formData.experience)
+      newErrors.experience = "Số năm kinh nghiệm không được trống";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -51,39 +55,45 @@ function InformationStudent() {
 
   const handleAddClick = () => {
     setFormData({
+      id: null,
       name: "",
-      studentId: "",
-      email: "",
+      license: "",
       phone: "",
-      address: "",
+      email: "",
+      experience: "",
     });
+    setIsEdit(false);
     setErrors({});
     setShowModal(true);
   };
 
   const handleSave = () => {
     if (validate()) {
-      const newStudent = {
-        id: Date.now(),
-        ...formData,
-      };
-      setStudents([...students, newStudent]);
+      if (isEdit) {
+        setDrivers(
+          drivers.map((d) => (d.id === formData.id ? formData : d))
+        );
+      } else {
+        setDrivers([...drivers, { ...formData, id: Date.now() }]);
+      }
       setShowModal(false);
+    }
+  };
+
+  const handleEdit = (driver) => {
+    setFormData(driver);
+    setIsEdit(true);
+    setShowModal(true);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Bạn có chắc muốn xóa tài xế này không?")) {
+      setDrivers(drivers.filter((d) => d.id !== id));
     }
   };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure to delete this student?")) {
-      setStudents(students.filter((s) => s.id !== id));
-    }
-  };
-
-  const handleEdit = (id) => {
-    alert(`Edit student with ID: ${id}`);
   };
 
   return (
@@ -103,6 +113,7 @@ function InformationStudent() {
         className="d-flex flex-grow-1"
         style={{ width: "100%", height: "calc(100vh - 120px)" }}
       >
+        {/* Sidebar */}
         <div
           style={{
             width: "250px",
@@ -114,58 +125,50 @@ function InformationStudent() {
           <Sidebar />
         </div>
 
-        <div
-          className="flex-grow-1 bg-light p-4 overflow-auto"
-          style={{ minHeight: "100%" }}
-        >
-          <div
-            className="card shadow-sm border-0 mx-auto"
-            style={{ maxWidth: "1200px" }}
-          >
+        {/* Main content */}
+        <div className="flex-grow-1 bg-light p-4 overflow-auto">
+          <div className="card shadow-sm border-0 mx-auto" style={{ maxWidth: "1200px" }}>
             <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-              <span className="fw-bold">Quản lí học sinh</span>
-              <button
-                className="btn btn-light btn-sm"
-                onClick={handleAddClick}
-              >
-                ➕ Add Student
+              <h5 className="mb-0">🚍 Quản lý tài xế</h5>
+              <button className="btn btn-light btn-sm" onClick={handleAddClick}>
+                ➕ Thêm tài xế
               </button>
             </div>
 
             <div className="card-body">
-              <table className="table table-striped align-middle">
+              <table className="table table-striped align-middle text-center">
                 <thead className="table-primary">
                   <tr>
                     <th>#</th>
-                    <th>Full Name</th>
-                    <th>Student ID</th>
+                    <th>Họ tên</th>
+                    <th>GPLX</th>
+                    <th>Điện thoại</th>
                     <th>Email</th>
-                    <th>Phone</th>
-                    <th>Address</th>
-                    <th>Actions</th>
+                    <th>Kinh nghiệm (năm)</th>
+                    <th>Hành động</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map((student, index) => (
-                    <tr key={student.id}>
+                  {drivers.map((driver, index) => (
+                    <tr key={driver.id}>
                       <td>{index + 1}</td>
-                      <td>{student.name}</td>
-                      <td>{student.studentId}</td>
-                      <td>{student.email}</td>
-                      <td>{student.phone}</td>
-                      <td>{student.address}</td>
+                      <td>{driver.name}</td>
+                      <td>{driver.license}</td>
+                      <td>{driver.phone}</td>
+                      <td>{driver.email}</td>
+                      <td>{driver.experience}</td>
                       <td>
                         <button
                           className="btn btn-warning btn-sm me-2"
-                          onClick={() => handleEdit(student.id)}
+                          onClick={() => handleEdit(driver)}
                         >
-                          ✏️ Edit
+                          ✏️ Sửa
                         </button>
                         <button
                           className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(student.id)}
+                          onClick={() => handleDelete(driver.id)}
                         >
-                          🗑️ Delete
+                          🗑️ Xóa
                         </button>
                       </td>
                     </tr>
@@ -173,9 +176,9 @@ function InformationStudent() {
                 </tbody>
               </table>
 
-              {students.length === 0 && (
+              {drivers.length === 0 && (
                 <p className="text-center text-muted mt-3">
-                  No students found.
+                  Không có tài xế nào.
                 </p>
               )}
             </div>
@@ -183,7 +186,7 @@ function InformationStudent() {
         </div>
       </div>
 
-      {/* Modal Add Student */}
+      {/* Modal thêm/sửa tài xế */}
       {showModal && (
         <div
           className="modal fade show"
@@ -195,7 +198,9 @@ function InformationStudent() {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Add New Student</h5>
+                <h5 className="modal-title">
+                  {isEdit ? "Chỉnh sửa tài xế" : "Thêm tài xế mới"}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -203,14 +208,20 @@ function InformationStudent() {
                 ></button>
               </div>
               <div className="modal-body">
-                {["name", "studentId", "email", "phone", "address"].map(
+                {["name", "license", "phone", "email", "experience"].map(
                   (field) => (
                     <div className="mb-3" key={field}>
-                      <label className="form-label">
-                        {field.charAt(0).toUpperCase() + field.slice(1)}
+                      <label className="form-label fw-semibold">
+                        {{
+                          name: "Họ tên",
+                          license: "GPLX",
+                          phone: "Số điện thoại",
+                          email: "Email",
+                          experience: "Kinh nghiệm (năm)",
+                        }[field]}
                       </label>
                       <input
-                        type="text"
+                        type={field === "experience" ? "number" : "text"}
                         className={`form-control ${
                           errors[field] ? "is-invalid" : ""
                         }`}
@@ -230,10 +241,10 @@ function InformationStudent() {
                   className="btn btn-secondary"
                   onClick={() => setShowModal(false)}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button className="btn btn-primary" onClick={handleSave}>
-                  Save
+                  Lưu
                 </button>
               </div>
             </div>
@@ -244,4 +255,4 @@ function InformationStudent() {
   );
 }
 
-export default InformationStudent;
+export default DriverManagement;
