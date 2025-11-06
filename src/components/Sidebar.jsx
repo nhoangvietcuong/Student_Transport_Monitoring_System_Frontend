@@ -5,13 +5,14 @@ import "bootstrap/dist/css/bootstrap.min.css";
 function Sidebar({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    if (window.confirm("Bạn có chắc muốn đăng xuất không?")) {
-      localStorage.removeItem("isLoggedIn");
-      setIsLoggedIn(false); // ✅ cập nhật state để App re-render
-      navigate("/login"); // ✅ điều hướng tức thì
-    }
-  };
+const handleLogout = () => {
+  if (window.confirm("Bạn có chắc muốn đăng xuất không?")) {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false); // ✅ chỉ cần dòng này thôi
+  }
+};
+
+
 
   return (
     <div
@@ -22,7 +23,6 @@ function Sidebar({ setIsLoggedIn }) {
         padding: "20px",
         background: "linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)",
         borderRight: "3px solid #007bff33",
-        marginTop: "-25px",
       }}
     >
       {/* Menu */}
@@ -108,10 +108,7 @@ function Sidebar({ setIsLoggedIn }) {
         <button
           onClick={handleLogout}
           className="btn btn-outline-danger w-100 fw-semibold mt-3"
-          style={{
-            transition: "0.2s",
-            borderWidth: "2px",
-          }}
+          style={{ transition: "0.2s", borderWidth: "2px" }}
         >
           Đăng xuất
         </button>
