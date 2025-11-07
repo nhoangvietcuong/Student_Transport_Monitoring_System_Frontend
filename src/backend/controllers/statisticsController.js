@@ -1,19 +1,5 @@
-/**
- * ================================
- * 📊 statisticsController.js
- * Thống kê số chuyến của từng tài xế
- * Dựa trên 3 collection:
- * - drivers
- * - buses
- * - routes (chứa busId và arrival kiểu Date)
- * ================================
- */
-
 const Route = require("../models/routeModel");
 
-// ======================================
-// 🧮 1️⃣ LẤY THỐNG KÊ TOÀN BỘ THÁNG
-// ======================================
 const getDriverTripStats = async (req, res) => {
   try {
     const result = await Route.aggregate([
@@ -59,15 +45,11 @@ const getDriverTripStats = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
-    console.error("❌ [getDriverTripStats] Lỗi:", err);
+    console.error(" [getDriverTripStats] Lỗi:", err);
     res.status(500).json({ message: "Không thể lấy thống kê toàn bộ tháng" });
   }
 };
 
-// ======================================
-// 📅 2️⃣ LẤY THỐNG KÊ THEO THÁNG CỤ THỂ
-// URL: GET /statistics/month/:month
-// ======================================
 const getDriverTripByMonth = async (req, res) => {
   try {
     const month = parseInt(req.params.month);
@@ -118,15 +100,12 @@ const getDriverTripByMonth = async (req, res) => {
 
     res.status(200).json(result);
   } catch (err) {
-    console.error("❌ [getDriverTripByMonth] Lỗi:", err);
+    console.error(" [getDriverTripByMonth] Lỗi:", err);
     res.status(500).json({ message: "Không thể lấy thống kê theo tháng" });
   }
 };
 
-// ======================================
-// 🥇 3️⃣ LẤY TOP TÀI XẾ CHẠY NHIỀU NHẤT
-// URL: GET /statistics/top/:month
-// ======================================
+
 const getTopDriver = async (req, res) => {
   try {
     const month = parseInt(req.params.month);
@@ -180,14 +159,10 @@ const getTopDriver = async (req, res) => {
       .status(200)
       .json(result[0] || { message: "Không có dữ liệu cho tháng này" });
   } catch (err) {
-    console.error("❌ [getTopDriver] Lỗi:", err);
+    console.error(" [getTopDriver] Lỗi:", err);
     res.status(500).json({ message: "Không thể lấy top tài xế" });
   }
 };
-
-// ======================================
-// 🚀 EXPORT CONTROLLER
-// ======================================
 module.exports = {
   getDriverTripStats,
   getDriverTripByMonth,
