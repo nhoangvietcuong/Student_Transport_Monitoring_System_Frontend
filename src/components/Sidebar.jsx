@@ -5,110 +5,66 @@ import "bootstrap/dist/css/bootstrap.min.css";
 function Sidebar({ setIsLoggedIn }) {
   const navigate = useNavigate();
 
-const handleLogout = () => {
-  if (window.confirm("Bạn có chắc muốn đăng xuất không?")) {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false); // ✅ chỉ cần dòng này thôi
-  }
-};
-
-
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc muốn đăng xuất không?")) {
+      localStorage.removeItem("isLoggedIn");
+      setIsLoggedIn(false);
+    }
+  };
 
   return (
     <div
-      className="d-flex flex-column border-end shadow-sm"
+      className="d-flex flex-column border-end shadow-lg"
       style={{
-        width: "260px",
+        width: "230px",
         minHeight: "100vh",
         padding: "20px",
-        background: "linear-gradient(180deg, #f0f4ff 0%, #ffffff 100%)",
-        borderRight: "3px solid #007bff33",
+        background: "linear-gradient(180deg, #0d47a1 0%, #1565c0 100%)", // 💙 xanh đậm
+        color: "#fff",
       }}
     >
+      <h5 className="text-center fw-bold mb-4" style={{ letterSpacing: "1px" }}>
+        🚍 Quản lý xe bus
+      </h5>
+
       {/* Menu */}
       <ul className="nav flex-column">
-        <li className="nav-item mb-2">
-          <NavLink
-            to="/students"
-            className={({ isActive }) =>
-              `nav-link fw-semibold rounded px-3 py-2 ${
-                isActive
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-dark bg-light"
-              }`
-            }
-          >
-            Danh sách học sinh
-          </NavLink>
-        </li>
-
-        <li className="nav-item mb-2">
-          <NavLink
-            to="/accounts"
-            className={({ isActive }) =>
-              `nav-link fw-semibold rounded px-3 py-2 ${
-                isActive
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-dark bg-light"
-              }`
-            }
-          >
-            Tài khoản
-          </NavLink>
-        </li>
-
-        <li className="nav-item mb-2">
-          <NavLink
-            to="/buses"
-            className={({ isActive }) =>
-              `nav-link fw-semibold rounded px-3 py-2 ${
-                isActive
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-dark bg-light"
-              }`
-            }
-          >
-            Xe Bus
-          </NavLink>
-        </li>
-
-        <li className="nav-item mb-2">
-          <NavLink
-            to="/drivers"
-            className={({ isActive }) =>
-              `nav-link fw-semibold rounded px-3 py-2 ${
-                isActive
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-dark bg-light"
-              }`
-            }
-          >
-            Tài xế
-          </NavLink>
-        </li>
-
-        <li className="nav-item mb-2">
-          <NavLink
-            to="/statistics"
-            className={({ isActive }) =>
-              `nav-link fw-semibold rounded px-3 py-2 ${
-                isActive
-                  ? "bg-primary text-white shadow-sm"
-                  : "text-dark bg-light"
-              }`
-            }
-          >
-            Thống kê
-          </NavLink>
-        </li>
+        {[
+          { path: "/students", label: "Danh sách học sinh" },
+          { path: "/accounts", label: "Tài khoản" },
+          { path: "/buses", label: "Xe Bus" },
+          { path: "/drivers", label: "Tài xế" },
+          { path: "/statistics", label: "Thống kê" },
+        ].map((item) => (
+          <li className="nav-item mb-2" key={item.path}>
+            <NavLink
+              to={item.path}
+              className={({ isActive }) =>
+                `nav-link fw-semibold rounded px-3 py-2 ${
+                  isActive
+                    ? "bg-light text-primary shadow-sm" // Khi active: sáng màu, nổi bật
+                    : "text-white text-opacity-85"
+                }`
+              }
+              style={{
+                transition: "0.3s",
+              }}
+            >
+              {item.label}
+            </NavLink>
+          </li>
+        ))}
       </ul>
 
       {/* Nút đăng xuất */}
       <div className="mt-auto">
         <button
           onClick={handleLogout}
-          className="btn btn-outline-danger w-100 fw-semibold mt-3"
-          style={{ transition: "0.2s", borderWidth: "2px" }}
+          className="btn btn-outline-light w-100 fw-semibold mt-3"
+          style={{
+            transition: "0.2s",
+            borderWidth: "2px",
+          }}
         >
           Đăng xuất
         </button>

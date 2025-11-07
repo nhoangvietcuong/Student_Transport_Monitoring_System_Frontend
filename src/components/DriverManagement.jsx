@@ -1,27 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import "bootstrap/dist/css/bootstrap.min.css";
+import axios from "axios";
 
 function DriverManagement() {
-  const [drivers, setDrivers] = useState([
-    {
-      id: 1,
-      name: "Nguyễn Văn A",
-      license: "B2-12345",
-      phone: "0909123456",
-      email: "driverA@example.com",
-      experience: 5,
-    },
-    {
-      id: 2,
-      name: "Trần Thị B",
-      license: "C-54321",
-      phone: "0912345678",
-      email: "driverB@example.com",
-      experience: 3,
-    },
-  ]);
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState(null);
+
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  useEffect(() => {
+    fetchDrivers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const fetchDrivers = async () => {
+    setLoading(true);
+    setServerError(null);
+    try {
+      const res = await axios.get(`${API_BASE}/drivers`);
+      setDrivers(res.data || []);
+    } catch (err) {
+      console.error("Error fetching drivers:", err);
+      setServerError("Không thể tải danh sách tài xế");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -68,16 +75,31 @@ function DriverManagement() {
   };
 
   const handleSave = () => {
-    if (validate()) {
-      if (isEdit) {
-        setDrivers(
-          drivers.map((d) => (d.id === formData.id ? formData : d))
-        );
-      } else {
-        setDrivers([...drivers, { ...formData, id: Date.now() }]);
+    if (!validate()) return;
+
+    const payload = {
+      name: formData.name,
+      license: formData.license,
+      phone: formData.phone,
+      email: formData.email,
+      experience: Number(formData.experience) || 0,
+    };
+
+    (async () => {
+      try {
+        if (isEdit) {
+          const res = await axios.put(`${API_BASE}/drivers/${formData.id}`, payload);
+          setDrivers(drivers.map((d) => (d._id === res.data._id || d.id === res.data._id || d.id === formData.id ? res.data : d)));
+        } else {
+          const res = await axios.post(`${API_BASE}/drivers`, payload);
+          setDrivers([...drivers, res.data]);
+        }
+        setShowModal(false);
+      } catch (err) {
+        console.error("Error saving driver:", err);
+        setServerError("Lưu tài xế thất bại");
       }
-      setShowModal(false);
-    }
+    })();
   };
 
   const handleEdit = (driver) => {
@@ -88,7 +110,16 @@ function DriverManagement() {
 
   const handleDelete = (id) => {
     if (window.confirm("Bạn có chắc muốn xóa tài xế này không?")) {
-      setDrivers(drivers.filter((d) => d.id !== id));
+      (async () => {
+        try {
+          // backend id field likely _id
+          await axios.delete(`${API_BASE}/drivers/${id}`);
+          setDrivers(drivers.filter((d) => d._id !== id && d.id !== id));
+        } catch (err) {
+          console.error("Error deleting driver:", err);
+          setServerError("Xóa tài xế thất bại");
+        }
+      })();
     }
   };
 
@@ -136,6 +167,18 @@ function DriverManagement() {
             </div>
 
             <div className="card-body">
+              {serverError && (
+                <div className="alert alert-danger" role="alert">
+                  {serverError}
+                </div>
+              )}
+              {loading ? (
+                <div className="text-center my-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : (
               <table className="table table-striped align-middle text-center">
                 <thead className="table-primary">
                   <tr>
@@ -149,32 +192,36 @@ function DriverManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {drivers.map((driver, index) => (
-                    <tr key={driver.id}>
-                      <td>{index + 1}</td>
-                      <td>{driver.name}</td>
-                      <td>{driver.license}</td>
-                      <td>{driver.phone}</td>
-                      <td>{driver.email}</td>
-                      <td>{driver.experience}</td>
-                      <td>
-                        <button
-                          className="btn btn-warning btn-sm me-2"
-                          onClick={() => handleEdit(driver)}
-                        >
-                          ✏️ Sửa
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(driver.id)}
-                        >
-                          🗑️ Xóa
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {drivers.map((driver, index) => {
+                    const id = driver._id || driver.id;
+                    return (
+                      <tr key={id}>
+                        <td>{index + 1}</td>
+                        <td>{driver.name}</td>
+                        <td>{driver.license}</td>
+                        <td>{driver.phone}</td>
+                        <td>{driver.email}</td>
+                        <td>{driver.experience}</td>
+                        <td>
+                          <button
+                            className="btn btn-warning btn-sm me-2"
+                            onClick={() => handleEdit({ ...driver, id })}
+                          >
+                            ✏️ Sửa
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(id)}
+                          >
+                            🗑️ Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+              )}
 
               {drivers.length === 0 && (
                 <p className="text-center text-muted mt-3">

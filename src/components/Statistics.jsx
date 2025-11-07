@@ -1,26 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import "bootstrap/dist/css/bootstrap.min.css";
+import axios from "axios";
 
 function Statistics() {
-  const sampleData = [
-    { name: "Nguyễn Văn A", month: 1, trips: 15 },
-    { name: "Nguyễn Văn A", month: 2, trips: 20 },
-    { name: "Trần Thị B", month: 1, trips: 22 },
-    { name: "Trần Thị B", month: 2, trips: 18 },
-    { name: "Lê Văn C", month: 1, trips: 10 },
-    { name: "Lê Văn C", month: 2, trips: 25 },
-  ];
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   const [selectedMonth, setSelectedMonth] = useState(1);
-  const filteredData = sampleData.filter((d) => d.month === selectedMonth);
-  const topDriver =
-    filteredData.length > 0
-      ? filteredData.reduce((max, curr) =>
-          curr.trips > max.trips ? curr : max
-        )
-      : null;
+  const [stats, setStats] = useState([]); // [{ driverName, month, trips }]
+  const [topDriver, setTopDriver] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [monthRes, topRes] = await Promise.all([
+          axios.get(`${API_BASE}/statistics/month/${selectedMonth}`),
+          axios.get(`${API_BASE}/statistics/top/${selectedMonth}`),
+        ]);
+
+        setStats(Array.isArray(monthRes.data) ? monthRes.data : []);
+        // topRes may return an object with driverName/trips or a message
+        if (topRes.data && topRes.data.driverName) setTopDriver(topRes.data);
+        else setTopDriver(null);
+      } catch (err) {
+        console.error("Error loading statistics:", err);
+        const msg = err?.response?.data?.message || "Không thể tải thống kê";
+        setError(msg);
+        setStats([]);
+        setTopDriver(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetch();
+  }, [selectedMonth]);
 
   return (
     <div
@@ -78,34 +97,45 @@ function Statistics() {
                 Danh sách số chuyến theo tháng {selectedMonth}:
               </h5>
 
-              <table className="table table-striped align-middle text-center">
-                <thead className="table-primary">
-                  <tr>
-                    <th>#</th>
-                    <th>Tài xế</th>
-                    <th>Số chuyến</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.map((d, index) => (
-                    <tr key={index}>
-                      <td>{index + 1}</td>
-                      <td>{d.name}</td>
-                      <td>{d.trips}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              {topDriver ? (
-                <div className="alert alert-success mt-4">
-                  🚍 <b>{topDriver.name}</b> là bác tài chạy nhiều nhất trong tháng{" "}
-                  <b>{selectedMonth}</b> với <b>{topDriver.trips}</b> chuyến.
+              {loading ? (
+                <div className="text-center my-4">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
                 </div>
+              ) : error ? (
+                <div className="alert alert-danger">{error}</div>
+              ) : stats.length === 0 ? (
+                <div className="alert alert-warning">Không có dữ liệu cho tháng {selectedMonth}.</div>
               ) : (
-                <div className="alert alert-warning mt-4">
-                  Không có dữ liệu cho tháng {selectedMonth}.
-                </div>
+                <>
+                  <table className="table table-striped align-middle text-center">
+                    <thead className="table-primary">
+                      <tr>
+                        <th>#</th>
+                        <th>Tài xế</th>
+                        <th>Số chuyến</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.map((d, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{d.driverName}</td>
+                          <td>{d.trips}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {topDriver ? (
+                    <div className="alert alert-success mt-4">
+                      🚍 <b>{topDriver.driverName}</b> là bác tài chạy nhiều nhất trong tháng <b>{selectedMonth}</b> với <b>{topDriver.trips}</b> chuyến.
+                    </div>
+                  ) : (
+                    <div className="alert alert-warning mt-4">Không có dữ liệu top cho tháng {selectedMonth}.</div>
+                  )}
+                </>
               )}
             </div>
           </div>
