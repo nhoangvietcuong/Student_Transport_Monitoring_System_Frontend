@@ -1,68 +1,153 @@
+import React, { useState, useEffect } from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import { useState } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
+import axios from "axios";
+
+// Giả định interface IUser (chỉ có email, password, role)
+// export interface IUser extends Document {
+//   email: string;
+//   password?: string; // Mật khẩu là tùy chọn sau khi tạo
+//   role: 'admin' | 'parent' | 'driver';
+// }
 
 function AccountManagement() {
-  const [accounts, setAccounts] = useState([
-    {
-      id: 1,
-      username: "admin",
-      email: "admin@example.com",
-      role: "Admin",
-      status: "Active",
-    },
-    {
-      id: 2,
-      username: "student01",
-      email: "student01@example.com",
-      role: "User",
-      status: "Inactive",
-    },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [serverError, setServerError] = useState(null);
 
+  // Thay đổi endpoint từ /accounts sang /users
+  const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  // ✅ Lấy danh sách tài khoản (users) khi mở trang
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    setLoading(true);
+    setServerError(null);
+    try {
+      // Thay đổi endpoint: /accounts -> /users
+      const res = await axios.get(`${API_BASE}/users`);
+      setAccounts(res.data || []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setServerError("Không thể tải danh sách tài khoản người dùng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Modal form
   const [showModal, setShowModal] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  // Cập nhật formData: chỉ giữ lại email, role, thêm password cho tạo mới
   const [formData, setFormData] = useState({
-    username: "",
+    _id: null, // Sử dụng _id
     email: "",
-    role: "User",
-    status: "Active",
+    password: "", // Chỉ dùng khi tạo mới
+    role: "parent", // Thiết lập role mặc định phù hợp với enum
   });
   const [errors, setErrors] = useState({});
 
-  // ✅ Validate form
+  // ✅ Validate
   const validate = () => {
     const newErrors = {};
-    if (!formData.username.trim()) newErrors.username = "Username is required";
-    if (!formData.email.trim()) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Invalid email format";
-    if (!formData.role.trim()) newErrors.role = "Role is required";
-    if (!formData.status.trim()) newErrors.status = "Status is required";
+    if (!formData.email.trim()) {
+      newErrors.email = "Email không được trống";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Định dạng email không hợp lệ";
+    }
+
+    if (!isEdit && !formData.password) {
+      newErrors.password = "Mật khẩu không được trống khi tạo mới";
+    } else if (!isEdit && formData.password.length < 6) {
+      newErrors.password = "Mật khẩu phải có ít nhất 6 ký tự";
+    } // Giả định mật khẩu tối thiểu 6 ký tự
+
+    if (!formData.role.trim()) newErrors.role = "Vai trò không được trống";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Mở popup thêm mới
   const handleAddClick = () => {
     setFormData({
-      username: "",
+      _id: null,
       email: "",
-      role: "User",
-      status: "Active",
+      password: "",
+      role: "parent", // Role mặc định
     });
+    setIsEdit(false);
     setErrors({});
     setShowModal(true);
   };
 
-  // ✅ Lưu tài khoản mới
-  const handleSave = () => {
-    if (validate()) {
-      const newAccount = {
-        id: Date.now(),
-        ...formData,
-      };
-      setAccounts([...accounts, newAccount]);
+  // Cập nhật handleEdit: dùng _id và chỉ lấy email, role
+  const handleEdit = (account) => {
+    setFormData({
+      _id: account._id,
+      email: account.email,
+      password: "", // Không hiển thị hoặc chỉnh sửa mật khẩu cũ
+      role: account.role,
+    });
+    setIsEdit(true);
+    setErrors({});
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc muốn xóa tài khoản này không?")) {
+      try {
+        // Thay đổi endpoint: /accounts/:id -> /users/:id
+        await axios.delete(`${API_BASE}/users/${id}`);
+        setAccounts(accounts.filter((a) => a._id !== id));
+      } catch (err) {
+        console.error("Error deleting user:", err);
+        setServerError("Xóa tài khoản thất bại");
+      }
+    }
+  };
+
+  const handleSave = async () => {
+    if (!validate()) return;
+
+    // Payload chỉ bao gồm các trường trong schema
+    let payload = {
+      email: formData.email,
+      role: formData.role,
+    };
+
+    // Thêm mật khẩu chỉ khi TẠO MỚI
+    if (!isEdit) {
+      payload.password = formData.password;
+    }
+
+    try {
+      if (isEdit) {
+        // Cập nhật: /users/:id
+        const res = await axios.put(
+          `${API_BASE}/users/${formData._id}`,
+          payload
+        );
+        // Cập nhật danh sách sau khi sửa
+        setAccounts(
+          accounts.map((a) => (a._id === res.data._id ? res.data : a))
+        );
+      } else {
+        // Tạo mới: /users
+        const res = await axios.post(`${API_BASE}/users`, payload);
+        // Thêm tài khoản mới vào danh sách
+        setAccounts([...accounts, res.data]);
+      }
       setShowModal(false);
+      setServerError(null); // Xóa lỗi server nếu thành công
+    } catch (err) {
+      console.error("Error saving user:", err);
+      // Xử lý lỗi từ server (ví dụ: email đã tồn tại)
+      const errorMsg = err.response?.data?.message || "Lưu tài khoản thất bại";
+      setServerError(errorMsg);
     }
   };
 
@@ -70,16 +155,7 @@ function AccountManagement() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this account?")) {
-      setAccounts(accounts.filter((acc) => acc.id !== id));
-    }
-  };
-
-  const handleEdit = (id) => {
-    alert(`Edit account with ID: ${id}`);
-  };
-
+  // ✅ Render UI
   return (
     <div
       className="bg-light d-flex flex-column"
@@ -91,15 +167,12 @@ function AccountManagement() {
         overflowX: "hidden",
       }}
     >
-      {/* Header */}
       <Header />
 
-      {/* Layout chính */}
       <div
         className="d-flex flex-grow-1"
         style={{ width: "100%", height: "calc(100vh - 120px)" }}
       >
-        {/* Sidebar */}
         <div
           style={{
             width: "250px",
@@ -111,77 +184,81 @@ function AccountManagement() {
           <Sidebar />
         </div>
 
-        {/* Nội dung chính */}
-        <div
-          className="flex-grow-1 bg-light p-4 overflow-auto"
-          style={{ minHeight: "100%" }}
-        >
+        <div className="flex-grow-1 bg-light p-4 overflow-auto">
           <div
             className="card shadow-sm border-0 mx-auto"
             style={{ maxWidth: "1200px" }}
           >
             <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
-              <span className="fw-bold">Quản lí tài khoản</span>
-              <button
-                className="btn btn-light btn-sm"
-                onClick={handleAddClick}
-              >
-                ➕ Add Account
+              <h5 className="mb-0">👤 Quản lý người dùng</h5>
+              <button className="btn btn-light btn-sm" onClick={handleAddClick}>
+                ➕ Thêm người dùng
               </button>
             </div>
 
             <div className="card-body">
-              <table className="table table-striped align-middle">
-                <thead className="table-success">
-                  <tr>
-                    <th>#</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {accounts.map((acc, index) => (
-                    <tr key={acc.id}>
-                      <td>{index + 1}</td>
-                      <td>{acc.username}</td>
-                      <td>{acc.email}</td>
-                      <td>{acc.role}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            acc.status === "Active"
-                              ? "bg-success"
-                              : "bg-secondary"
-                          }`}
-                        >
-                          {acc.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className="btn btn-warning btn-sm me-2"
-                          onClick={() => handleEdit(acc.id)}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className="btn btn-danger btn-sm"
-                          onClick={() => handleDelete(acc.id)}
-                        >
-                          🗑️ Delete
-                        </button>
-                      </td>
+              {serverError && (
+                <div className="alert alert-danger">{serverError}</div>
+              )}
+              {loading ? (
+                <div className="text-center my-4">
+                  <div className="spinner-border text-success" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+              ) : (
+                <table className="table table-striped align-middle text-center">
+                  <thead className="table-success">
+                    <tr>
+                      <th>#</th>
+                      <th>Email</th>
+                      <th>Vai trò</th>
+                      {/* Thêm cột để hiển thị thời gian tạo/cập nhật nếu cần (timestamps: true) */}
+                      <th>Hành động</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {accounts.map((acc, index) => (
+                      <tr key={acc._id}>
+                        <td>{index + 1}</td>
+                        <td>{acc.email}</td>
+                        <td>
+                          {/* Đảm bảo vai trò được hiển thị đúng */}
+                          <span
+                            className={`badge ${
+                              acc.role === "admin"
+                                ? "bg-primary"
+                                : acc.role === "driver"
+                                ? "bg-info"
+                                : "bg-secondary"
+                            }`}
+                          >
+                            {acc.role}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="btn btn-warning btn-sm me-2"
+                            onClick={() => handleEdit(acc)}
+                          >
+                            ✏️ Sửa
+                          </button>
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleDelete(acc._id)}
+                          >
+                            🗑️ Xóa
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
-              {accounts.length === 0 && (
+              {accounts.length === 0 && !loading && (
                 <p className="text-center text-muted mt-3">
-                  No accounts found.
+                  Không có người dùng nào.
                 </p>
               )}
             </div>
@@ -189,7 +266,7 @@ function AccountManagement() {
         </div>
       </div>
 
-      {/* Modal Add Account */}
+      {/* Modal thêm/sửa tài khoản */}
       {showModal && (
         <div
           className="modal fade show"
@@ -201,35 +278,19 @@ function AccountManagement() {
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header bg-success text-white">
-                <h5 className="modal-title">Add New Account</h5>
+                <h5 className="modal-title">
+                  {isEdit ? "Chỉnh sửa người dùng" : "Thêm người dùng mới"}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
                   onClick={() => setShowModal(false)}
                 ></button>
               </div>
-
               <div className="modal-body">
-                {/* Username */}
+                {/* Email Field */}
                 <div className="mb-3">
-                  <label className="form-label">Username</label>
-                  <input
-                    type="text"
-                    className={`form-control ${
-                      errors.username ? "is-invalid" : ""
-                    }`}
-                    name="username"
-                    value={formData.username}
-                    onChange={handleChange}
-                  />
-                  {errors.username && (
-                    <div className="invalid-feedback">{errors.username}</div>
-                  )}
-                </div>
-
-                {/* Email */}
-                <div className="mb-3">
-                  <label className="form-label">Email</label>
+                  <label className="form-label fw-semibold">Email</label>
                   <input
                     type="email"
                     className={`form-control ${
@@ -238,60 +299,60 @@ function AccountManagement() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
+                    disabled={isEdit} // Thường không cho sửa email khi chỉnh sửa
                   />
                   {errors.email && (
                     <div className="invalid-feedback">{errors.email}</div>
                   )}
                 </div>
 
-                {/* Role */}
+                {/* Password Field (Chỉ hiện khi THÊM MỚI) */}
+                {!isEdit && (
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold">Mật khẩu</label>
+                    <input
+                      type="password"
+                      className={`form-control ${
+                        errors.password ? "is-invalid" : ""
+                      }`}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                    />
+                    {errors.password && (
+                      <div className="invalid-feedback">{errors.password}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Role Field */}
                 <div className="mb-3">
-                  <label className="form-label">Role</label>
+                  <label className="form-label fw-semibold">Vai trò</label>
                   <select
-                    className={`form-select ${
-                      errors.role ? "is-invalid" : ""
-                    }`}
+                    className={`form-select ${errors.role ? "is-invalid" : ""}`}
                     name="role"
                     value={formData.role}
                     onChange={handleChange}
                   >
-                    <option value="User">User</option>
-                    <option value="Admin">Admin</option>
+                    {/* Role phải khớp với enum: ['admin', 'parent', 'driver'] */}
+                    <option value="parent">parent (Phụ huynh)</option>
+                    <option value="driver">driver (Tài xế)</option>
+                    <option value="admin">admin (Quản trị viên)</option>
                   </select>
                   {errors.role && (
                     <div className="invalid-feedback">{errors.role}</div>
                   )}
                 </div>
-
-                {/* Status */}
-                <div className="mb-3">
-                  <label className="form-label">Status</label>
-                  <select
-                    className={`form-select ${
-                      errors.status ? "is-invalid" : ""
-                    }`}
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                  {errors.status && (
-                    <div className="invalid-feedback">{errors.status}</div>
-                  )}
-                </div>
               </div>
-
               <div className="modal-footer">
                 <button
                   className="btn btn-secondary"
                   onClick={() => setShowModal(false)}
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button className="btn btn-success" onClick={handleSave}>
-                  Save
+                  Lưu
                 </button>
               </div>
             </div>

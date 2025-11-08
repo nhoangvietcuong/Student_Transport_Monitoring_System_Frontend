@@ -34,6 +34,7 @@ function Sidebar({ setIsLoggedIn }) {
           { path: "/accounts", label: "Tài khoản" },
           { path: "/buses", label: "Xe Bus" },
           { path: "/drivers", label: "Tài xế" },
+          { path: "/parents", label: "Phụ Quynh" },
           { path: "/statistics", label: "Thống kê" },
         ].map((item) => (
           <li className="nav-item mb-2" key={item.path}>
