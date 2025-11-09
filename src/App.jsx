@@ -7,6 +7,10 @@ import Statistics from "./components/Statistics";
 import Login from "./components/Login";
 import DriverManagement from "./components/DriverManagement";
 import ParentManagement from "./components/ParentManagement";
+import StopManagement from "./components/StopManagement";
+import RouteManagement from "./components/RouteManagement";
+
+
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(
@@ -36,8 +40,9 @@ function App() {
             <Route path="/buses" element={<BusManagement />} />
             <Route path="/drivers" element={<DriverManagement />} />
             <Route path="/parents" element={<ParentManagement />} />
+            <Route path="/stops" element={<StopManagement />} />
+            <Route path="/routes" element={<RouteManagement />} />
             <Route path="/statistics" element={<Statistics />} />
-            <Route path="*" element={<Navigate to="/students" />} />
           </>
         )}
       </Routes>

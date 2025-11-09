@@ -24,7 +24,7 @@ function Sidebar({ setIsLoggedIn }) {
       }}
     >
       <h5 className="text-center fw-bold mb-4" style={{ letterSpacing: "1px" }}>
-        🚍 Quản lý xe bus
+        🚍 Hệ Thống Quản Lí
       </h5>
 
       {/* Menu */}
@@ -35,6 +35,8 @@ function Sidebar({ setIsLoggedIn }) {
           { path: "/buses", label: "Xe Bus" },
           { path: "/drivers", label: "Tài xế" },
           { path: "/parents", label: "Phụ Quynh" },
+          { path: "/stops", label: "Điểm dừng" },
+          { path: "/routes", label: "Chuyến xe" },
           { path: "/statistics", label: "Thống kê" },
         ].map((item) => (
           <li className="nav-item mb-2" key={item.path}>

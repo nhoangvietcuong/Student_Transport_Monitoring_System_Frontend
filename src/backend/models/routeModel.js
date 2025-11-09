@@ -35,7 +35,7 @@ const routeSchema = new mongoose.Schema({
       },
       estimatedArrivalTime: { 
         type: String, 
-        required: true 
+        required: false
       },
       _id: false // Ngăn Mongoose tạo ID cho sub-document này
     }

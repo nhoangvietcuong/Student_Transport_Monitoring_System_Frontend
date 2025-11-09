@@ -20,6 +20,8 @@
   app.use("/drivers", require("./routes/driverRoutes"));
   app.use("/buses", require("./routes/busRoutes"));
   app.use("/students", require("./routes/studentRoutes"));
+  app.use("/stops", require("./routes/stopRouter"));
+  app.use("/routes", require("./routes/routesRoutes"));
   app.use("/statistics", statisticsRoutes);
 
 

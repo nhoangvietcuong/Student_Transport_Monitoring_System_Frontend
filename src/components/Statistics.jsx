@@ -7,7 +7,7 @@ import axios from "axios";
 function Statistics() {
   const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-  const [selectedMonth, setSelectedMonth] = useState(1);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [stats, setStats] = useState([]); // [{ driverName, month, trips }]
   const [topDriver, setTopDriver] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -62,10 +62,11 @@ function Statistics() {
         {/* Sidebar */}
         <div
           style={{
-            width: "250px",
+            width: "230px",
             backgroundColor: "#fff",
             borderRight: "1px solid #dee2e6",
             padding: "20px",
+            boxSizing: "border-box",
           }}
         >
           <Sidebar />
@@ -73,7 +74,10 @@ function Statistics() {
 
         {/* Main content */}
         <div className="flex-grow-1 bg-light p-4 overflow-auto">
-          <div className="card shadow border-0 mx-auto" style={{ maxWidth: "1200px" }}>
+          <div
+            className="card shadow border-0 mx-auto"
+            style={{ maxWidth: "1200px", width: "100%" }}
+          >
             <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">📊 Thống kê tài xế</h5>
               <div className="d-flex align-items-center">
@@ -106,7 +110,9 @@ function Statistics() {
               ) : error ? (
                 <div className="alert alert-danger">{error}</div>
               ) : stats.length === 0 ? (
-                <div className="alert alert-warning">Không có dữ liệu cho tháng {selectedMonth}.</div>
+                <div className="alert alert-warning">
+                  Không có dữ liệu cho tháng {selectedMonth}.
+                </div>
               ) : (
                 <>
                   <table className="table table-striped align-middle text-center">
@@ -119,10 +125,10 @@ function Statistics() {
                     </thead>
                     <tbody>
                       {stats.map((d, index) => (
-                        <tr key={index}>
+                        <tr key={`${d.driverName ?? "driver"}-${index}`}>
                           <td>{index + 1}</td>
-                          <td>{d.driverName}</td>
-                          <td>{d.trips}</td>
+                          <td>{d.driverName || "(Chưa rõ)"}</td>
+                          <td>{d.trips ?? 0}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -130,10 +136,14 @@ function Statistics() {
 
                   {topDriver ? (
                     <div className="alert alert-success mt-4">
-                      🚍 <b>{topDriver.driverName}</b> là bác tài chạy nhiều nhất trong tháng <b>{selectedMonth}</b> với <b>{topDriver.trips}</b> chuyến.
+                      🚍 <b>{topDriver.driverName}</b> là bác tài chạy nhiều
+                      nhất trong tháng <b>{selectedMonth}</b> với{" "}
+                      <b>{topDriver.trips}</b> chuyến.
                     </div>
                   ) : (
-                    <div className="alert alert-warning mt-4">Không có dữ liệu top cho tháng {selectedMonth}.</div>
+                    <div className="alert alert-warning mt-4">
+                      Không có dữ liệu top cho tháng {selectedMonth}.
+                    </div>
                   )}
                 </>
               )}

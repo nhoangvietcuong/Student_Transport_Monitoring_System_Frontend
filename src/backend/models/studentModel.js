@@ -1,31 +1,32 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const studentSchema = new Schema({
-    name: { 
-        type: String, 
-        required: true 
+const studentSchema = new Schema(
+  {
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Parent",
+      required: true,
     },
-    old: { // 'old' là trường bắt buộc theo schema trước của bạn
-        type: Number, 
-        required: true, 
-        min: 0 
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    classstudent: { // 'classstudent' là trường bắt buộc theo schema trước của bạn
-        type: String, 
-        required: true 
+    old: {
+      type: Number,
+      required: true,
+      min: 0,
     },
-    gender: { 
-        type: String, 
-        enum: ["Nam", "Nữ", "Khác"] 
+    classstudent: {
+      type: String,
+      required: true,
+      trim: true,
     },
-    parentId: { // Tham chiếu đến Phụ huynh
-        type: Schema.Types.ObjectId, 
-        ref: 'Parent', 
-        required: true // Bắt buộc
-    },
-}, { 
-    timestamps: true 
-});
+  },
+  {
+    timestamps: true, // tự động tạo createdAt và updatedAt
+  }
+);
 
-module.exports = mongoose.model('Student', studentSchema);
+module.exports = mongoose.model("Student", studentSchema);
