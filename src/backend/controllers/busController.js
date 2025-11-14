@@ -25,7 +25,8 @@ exports.create = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const bus = await Bus.findById(req.params.id).populate("driverId");
-    if (!bus) return res.status(404).json({ message: "Bus not found" });
+    if (!bus) 
+    return res.status(404).json({ message: "Bus not found" });
     res.json(bus);
   } catch (err) {
     res.status(500).json({ message: err.message });

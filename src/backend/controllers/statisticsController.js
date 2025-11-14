@@ -4,21 +4,21 @@ const Trip = require("../models/tripModel");
 const getDriverLookupPipeline = () => [
     {
         // 1. Lookup thông tin Driver (driverId đã có trong Trip)
-        $lookup: {
+        $lookup: { // join bảng driver vào trong trips
             from: "drivers", // Tên collection Drivers
             localField: "driverId",
             foreignField: "_id",
             as: "driver",
         },
     },
-    { $unwind: "$driver" },
+    { $unwind: "$driver" }, // chuyển về dạng object
 ];
 
 // Lấy thống kê số chuyến đi của tài xế theo từng tháng
 const getDriverTripStats = async (req, res) => {
     try {
         const result = await Trip.aggregate([
-            ...getDriverLookupPipeline(),
+            ...getDriverLookupPipeline(), // join driver vào trip
 
             // 2. Gom nhóm theo driver + month (trích xuất tháng trực tiếp từ $tripDate)
             {
@@ -27,14 +27,14 @@ const getDriverTripStats = async (req, res) => {
                         driverId: "$driver._id", 
                         month: { $month: "$tripDate" } // Trích xuất tháng trực tiếp
                     },
-                    trips: { $sum: 1 },
+                    trips: { $sum: 1 }, // đếm số chuyến
                     driverName: { $first: "$driver.name" },
                 },
             },
             
             // 3. Định dạng lại output
             {
-                $project: {
+                $project: { // định dạng lại cho đẹp
                     _id: 0,
                     driverName: "$driverName",
                     month: "$_id.month",
@@ -62,6 +62,9 @@ const getDriverTripByMonth = async (req, res) => {
 
         const result = await Trip.aggregate([
             // 1. Lọc theo tháng
+            // match giống WHERE
+            // $eq: [ A, B ] So sánh A == B
+            // $expr cho phép dùng biểu thức MongoDB trong $match
             { $match: { $expr: { $eq: [{ $month: "$tripDate" }, month] } } }, // Lọc trực tiếp
 
             ...getDriverLookupPipeline(),

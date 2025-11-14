@@ -52,7 +52,7 @@ function BusManagement() {
   });
   const [errors, setErrors] = useState({});
 
-  // ✅ Kiểm tra dữ liệu form
+  //  Kiểm tra dữ liệu form
   const validate = () => {
     const newErrors = {};
     if (!formData.plateNumber.trim())
@@ -68,7 +68,7 @@ function BusManagement() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ Mở modal thêm mới
+  //  Mở modal thêm mới
   const handleAddClick = () => {
     setFormData({
       plateNumber: "",
@@ -82,7 +82,7 @@ function BusManagement() {
     setShowModal(true);
   };
 
-  // ✅ Lưu (thêm hoặc cập nhật)
+  //  Lưu (thêm hoặc cập nhật)
   const handleSave = async () => {
     if (!validate()) return;
     const payload = {
@@ -111,12 +111,12 @@ function BusManagement() {
     }
   };
 
-  // ✅ Thay đổi input
+  //  Thay đổi input
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Xóa xe buýt
+  //  Xóa xe buýt
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa xe buýt này không?")) return;
     try {
@@ -129,7 +129,7 @@ function BusManagement() {
     }
   };
 
-  // ✅ Sửa xe buýt
+  //  Sửa xe buýt
   const handleEdit = (bus) => {
     setFormData({
       plateNumber: bus.plateNumber || "",

@@ -24,7 +24,6 @@ function Statistics() {
         ]);
 
         setStats(Array.isArray(monthRes.data) ? monthRes.data : []);
-        // topRes may return an object with driverName/trips or a message
         if (topRes.data && topRes.data.driverName) setTopDriver(topRes.data);
         else setTopDriver(null);
       } catch (err) {

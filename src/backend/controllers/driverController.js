@@ -25,7 +25,8 @@ exports.create = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const driver = await Driver.findById(req.params.id).populate("userId").populate("busId");
-    if (!driver) return res.status(404).json({ message: "Driver not found" });
+    if (!driver) 
+    return res.status(404).json({ message: "Driver not found" });
     res.json(driver);
   } catch (err) {
     res.status(500).json({ message: err.message });
